@@ -75,7 +75,7 @@ function networkUp () {
   fi
 
     # now run the end to end script
-  docker exec cli scripts/scripts-extended.sh $CHANNEL_NAME $CLI_DELAY $LANGUAGE $CLI_TIMEOUT $VERBOSE ${OrgName}
+  docker exec ${OrgName}cli scripts/scripts-extended.sh $CHANNEL_NAME $CLI_DELAY $LANGUAGE $CLI_TIMEOUT $VERBOSE ${OrgName}
   if [ $? -ne 0 ]; then
     echo "ERROR !!!! Test failed"
     exit 1
