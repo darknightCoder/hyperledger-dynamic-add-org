@@ -12,6 +12,8 @@
 
 # prepending $PWD/../bin to PATH to ensure we are picking up the correct binaries
 # this may be commented out to resolve installed version of tools if desired
+cd /home/ubuntu/fabric-samples/first-network/
+
 export PATH=${PWD}/../bin:${PWD}:$PATH
 export FABRIC_CFG_PATH=${PWD}
 export VERBOSE=false
@@ -67,6 +69,16 @@ function networkUp () {
       IMAGE_TAG=${IMAGETAG} docker-compose -f $COMPOSE_FILE_NEW_ORG -f $COMPOSE_FILE_COUCH_ORG3 up -d 2>&1
   else
       IMAGE_TAG=$IMAGETAG docker-compose -f $COMPOSE_FILE_NEW_ORG up -d 2>&1
+      sleep 1
+      echo "Sleeping 5s to allow kafka cluster to complete booting"
+      sleep 5
+  fi
+
+    # now run the end to end script
+  docker exec cli scripts/scripts-extended.sh $CHANNEL_NAME $CLI_DELAY $LANGUAGE $CLI_TIMEOUT $VERBOSE ${OrgName}
+  if [ $? -ne 0 ]; then
+    echo "ERROR !!!! Test failed"
+    exit 1
   fi
 
  
@@ -613,7 +625,7 @@ services:
       #- FABRIC_LOGGING_SPEC=DEBUG
       - CORE_PEER_ID=${OrgName}cli
       - CORE_PEER_ADDRESS=peer0.${OrgName}.example.com:7051
-      - CORE_PEER_LOCALMSPID=${OrgName}3MSP
+      - CORE_PEER_LOCALMSPID=${OrgName}MSP
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${OrgName}.example.com/peers/peer0.${OrgName}.example.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/${OrgName}.example.com/peers/peer0.${OrgName}.example.com/tls/server.key
@@ -628,6 +640,7 @@ services:
         - ./crypto-config/peerOrganizations/org1.example.com:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com
         - ./crypto-config/peerOrganizations/org2.example.com:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com
         - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+        - ./${OrgName}-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
     depends_on:
       - peer0.${OrgName}.example.com
       - peer1.${OrgName}.example.com
